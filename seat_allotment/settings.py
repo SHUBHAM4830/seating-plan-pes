@@ -80,17 +80,30 @@ WSGI_APPLICATION = 'seat_allotment.wsgi.application'
 import os
 
 # Determine if running in production (Render) or development
-IS_RENDER = bool(os.environ.get('RENDER'))
+IS_RENDER = bool(os.environ.get("RENDER"))
 
 if IS_RENDER:
-    # Production: Use Turso database
+    # Production: Turso/libsql
+    #
+    # IMPORTANT:
+    # - Use the exact URL provided by Turso (usually looks like: libsql://<db>-<org>.turso.io)
+    # - Do NOT hardcode the hostname; it can vary by org/region and Turso may reject old endpoints.
+    #
+    # Supported env vars (set these in Render):
+    # - TURSO_DATABASE_URL (preferred) OR DATABASE_URL
+    # - TURSO_AUTH_TOKEN (optional if your URL already embeds auth via querystring)
+    turso_db_url = os.environ.get("TURSO_DATABASE_URL") or os.environ.get("DATABASE_URL")
+    turso_auth_token = os.environ.get("TURSO_AUTH_TOKEN")
+
+    db_options = {}
+    if turso_auth_token:
+        db_options["auth_token"] = turso_auth_token
+
     DATABASES = {
-        'default': {
-            'ENGINE': 'libsql.db.backends.sqlite3',
-            'NAME': 'libsql://seating-plan-shubham4830.aws-ap-northeast-1.turso.io',
-            'OPTIONS': {
-                'auth_token': os.environ.get('TURSO_AUTH_TOKEN'),
-            },
+        "default": {
+            "ENGINE": "libsql.db.backends.sqlite3",
+            "NAME": turso_db_url,
+            **({"OPTIONS": db_options} if db_options else {}),
         }
     }
 else:
