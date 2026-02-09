@@ -79,15 +79,20 @@ WSGI_APPLICATION = 'seat_allotment.wsgi.application'
 
 import os
 
-# Check if we're in a production environment (like Render)
-if os.environ.get('RENDER'):
-    # Production: Try to use Turso database
+# Determine if running in production (Render) or development
+IS_RENDER = bool(os.environ.get('RENDER'))
+
+if IS_RENDER:
+    # Production: Use Turso database
     DATABASES = {
         'default': {
             'ENGINE': 'libsql.db.backends.sqlite3',
             'NAME': 'libsql://seating-plan-shubham4830.aws-ap-northeast-1.turso.io',
             'OPTIONS': {
                 'auth_token': os.environ.get('TURSO_AUTH_TOKEN'),
+                'connect_args': {
+                    'connection_timeout': 30,
+                },
             },
         }
     }
