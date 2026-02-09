@@ -1,2 +1,2 @@
-release: python manage.py migrate && python create_admin.py
+release: python manage.py ensure_migrations
 web: gunicorn seat_allotment.wsgi
