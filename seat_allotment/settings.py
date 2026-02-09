@@ -77,15 +77,28 @@ WSGI_APPLICATION = 'seat_allotment.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'libsql.db.backends.sqlite3',
-        'NAME': 'libsql://seating-plan-shubham4830.aws-ap-northeast-1.turso.io',
-        'OPTIONS': {
-            'auth_token': os.environ.get('TURSO_AUTH_TOKEN'),
-        },
+import os
+
+# Check if we're in a production environment (like Render)
+if os.environ.get('RENDER'):
+    # Production: Try to use Turso database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'libsql.db.backends.sqlite3',
+            'NAME': 'libsql://seating-plan-shubham4830.aws-ap-northeast-1.turso.io',
+            'OPTIONS': {
+                'auth_token': os.environ.get('TURSO_AUTH_TOKEN'),
+            },
+        }
     }
-}
+else:
+    # Development: Use local SQLite database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
