@@ -84,14 +84,13 @@ from urllib.parse import urlparse, parse_qs
 IS_RENDER = bool(os.environ.get("RENDER"))
 
 if IS_RENDER:
-    # Production: Neon PostgreSQL
-    # Parse DATABASE_URL from environment variable
-    # Format: postgresql://user:password@host:port/dbname?sslmode=require
-    # 
-    # To override, set DATABASE_URL environment variable in Render dashboard
+    # Production: Render PostgreSQL
+    # Render automatically sets DATABASE_URL to the internal URL when you link a PostgreSQL database
+    # Internal URL (default): postgresql://user:password@internal-host/dbname (faster, no external bandwidth)
+    # External URL: postgresql://user:password@external-host/dbname (for external access)
     database_url = os.environ.get(
         "DATABASE_URL",
-        "postgresql://neondb_owner:npg_Zg6QwzLMxuB1@ep-billowing-recipe-a152il1x-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+        "postgresql://seating_user:QLk0XswTvkXY7VejyFsKSiBYEt6NY0cr@dpg-d656emhr0fns738h7i4g-a/seating"
     )
     
     # Parse the connection string
@@ -104,7 +103,7 @@ if IS_RENDER:
     db_host = parsed.hostname
     db_port = parsed.port or 5432
     
-    # Parse query parameters for SSL settings
+    # Parse query parameters for SSL settings (Render PostgreSQL requires SSL)
     query_params = parse_qs(parsed.query)
     ssl_mode = query_params.get('sslmode', ['require'])[0]
     
