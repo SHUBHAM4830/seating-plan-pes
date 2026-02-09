@@ -43,10 +43,13 @@ if IS_RENDER:
     # Allow CSRF cookie to be sent over HTTPS in production
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
-    # CSRF cookie settings
+    # CSRF cookie settings for Render
     CSRF_COOKIE_HTTPONLY = False  # Must be False for JavaScript access if needed
     CSRF_COOKIE_SAMESITE = 'Lax'  # Allow CSRF cookie in cross-site requests
-    CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
+    CSRF_COOKIE_DOMAIN = None  # Use default (current domain) - important for Render
+    CSRF_USE_SESSIONS = False  # Use cookie-based CSRF (default)
+    # Ensure CSRF cookie is set on all requests
+    CSRF_COOKIE_PATH = '/'
 else:
     # Allow cookies over HTTP in development
     CSRF_COOKIE_SECURE = False
