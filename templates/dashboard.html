@@ -1,0 +1,434 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PESCE Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="{% static 'images/pesce_logo.png' %}">
+    <style>
+        :root {
+            --navy-blue: #002147;
+            --yellow: #FFD700;
+            --white: #ffffff;
+            --black: #1a1a1a;
+            --light-gray: #f4f4f4;
+            --danger: #dc3545;
+            --success: #28a745;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-gray);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--navy-blue);
+            color: var(--white);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand img {
+            height: 50px;
+            width: auto;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
+        }
+
+        .brand h1 {
+            font-size: 1.4rem;
+            margin: 0;
+            color: var(--yellow);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.9rem;
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 25px;
+            border-top: 3px solid var(--navy-blue);
+        }
+
+        h3 {
+            margin-top: 0;
+            color: var(--navy-blue);
+            border-bottom: 2px solid var(--light-gray);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+        }
+
+        /* Forms */
+        form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            border: 1px solid #ddd;
+            padding: 8px;
+            border-radius: 4px;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--navy-blue);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: #003366;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background-color: #bd2130;
+        }
+
+        .btn-panel {
+            background-color: var(--yellow);
+            color: var(--navy-blue);
+        }
+
+        .btn-panel:hover {
+            background-color: #e6c200;
+        }
+
+        /* Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+            /* Ensure table doesn't squash too much */
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--navy-blue);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background-color: #fcfcfc;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-expired {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-upcoming {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+
+        .status-inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .user-menu {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+                box-sizing: border-box;
+            }
+        }
+
+        /* Custom Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-top: 5px solid var(--navy-blue);
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            color: var(--navy-blue);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .modal-text {
+            color: #555;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn-modal-cancel {
+            background-color: #f8f9fa;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-modal-cancel:hover {
+            background-color: #e2e6ea;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <img src="{% static 'images/pesce_logo.png' %}" alt="Logo" onerror="this.style.display='none'">
+            <h1>PESCE Admin Dashboard</h1>
+        </div>
+        <div class="user-menu">
+            <span>Welcome, <strong>{{ request.user.username }}</strong></span>
+            <div style="display: flex; gap: 10px; width: 100%; justify-content: flex-end;">
+                <a href="{% url 'index' %}" class="btn btn-primary" target="_blank">Student Lookup</a>
+                <a href="/admin/" class="btn btn-panel">Admin Panel</a>
+                <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            style="background: #e8f0fe; color: #0c5460; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #bee5eb;">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <h3>Upload New Allotment</h3>
+            <form action="{% url 'upload_file' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="file" accept=".docx" multiple required>
+                <button type="submit" class="btn btn-primary">Upload & Parse</button>
+            </form>
+            <p style="font-size: 0.9em; color: #666; margin-top: 10px;">Supported format: <strong>.docx</strong> only.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Uploaded Files & Status</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Uploaded At</th>
+                            <th>Exam Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in uploads %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.file.filename }}</strong><br>
+                                <span style="font-size: 0.85em; color: #888;">ID: {{ item.file.id }}</span>
+                            </td>
+                            <td>{{ item.file.uploaded_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ item.file.exam_date|default:"-" }}</td>
+                            <td>
+                                <span class="status-badge status-{{ item.status|lower }}">{{ item.status }}</span>
+                            </td>
+                            <td>
+                                {% if item.status != 'Expired' %}
+                                <form action="{% url 'delete_upload' item.file.id %}" method="post"
+                                    style="display:inline;" class="delete-form">
+                                    {% csrf_token %}
+                                    <button type="button" class="btn btn-danger"
+                                        style="padding: 4px 8px; font-size: 0.8em;"
+                                        onclick="confirmDelete(this.form)">Delete</button>
+                                </form>
+                                {% else %}
+                                <span style="color: #999;">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #777;">No uploads found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Custom Confirmation Modal -->
+        <div id="confirmModal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-title">Confirm Action</div>
+                <div class="modal-text">Are you sure you want to delete this dataset? This action cannot be undone.
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-modal-cancel" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-danger" id="confirmBtn">Yes, Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let formToSubmit = null;
+
+            function confirmDelete(form) {
+                formToSubmit = form;
+                const modal = document.getElementById('confirmModal');
+                modal.style.display = 'flex';
+            }
+
+            function closeModal() {
+                const modal = document.getElementById('confirmModal');
+                modal.style.display = 'none';
+                formToSubmit = null;
+            }
+
+            document.getElementById('confirmBtn').addEventListener('click', function () {
+                if (formToSubmit) {
+                    formToSubmit.submit();
+                }
+                closeModal();
+            });
+
+            // Close on outside click
+            document.getElementById('confirmModal').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        </script>
+</body>
+
+</html>
