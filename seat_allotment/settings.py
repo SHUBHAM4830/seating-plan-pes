@@ -90,9 +90,6 @@ if IS_RENDER:
             'NAME': 'libsql://seating-plan-shubham4830.aws-ap-northeast-1.turso.io',
             'OPTIONS': {
                 'auth_token': os.environ.get('TURSO_AUTH_TOKEN'),
-                'connect_args': {
-                    'connection_timeout': 30,
-                },
             },
         }
     }
