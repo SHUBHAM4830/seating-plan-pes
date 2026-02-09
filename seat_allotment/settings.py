@@ -33,9 +33,9 @@ DEBUG = os.environ.get('Debug', 'False') == 'True'
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,seating-plan-pes.onrender.com').split(',')
 
 # CSRF settings for HTTPS (required for Django 4.0+)
+# Note: Wildcards are not supported, must use exact domains
 CSRF_TRUSTED_ORIGINS = [
     'https://seating-plan-pes.onrender.com',
-    'https://*.onrender.com',
 ]
 
 # Cookie security settings (only secure in production)
@@ -43,10 +43,15 @@ if IS_RENDER:
     # Allow CSRF cookie to be sent over HTTPS in production
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    # CSRF cookie settings
+    CSRF_COOKIE_HTTPONLY = False  # Must be False for JavaScript access if needed
+    CSRF_COOKIE_SAMESITE = 'Lax'  # Allow CSRF cookie in cross-site requests
+    CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 else:
     # Allow cookies over HTTP in development
     CSRF_COOKIE_SECURE = False
     SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SAMESITE = 'Lax'
 
 
 # Application definition
