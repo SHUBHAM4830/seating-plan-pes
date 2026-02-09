@@ -9,9 +9,12 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta, datetime
 import os
 import json
+import logging
 
 from .models import UploadedFile, SeatAllotment, VisibilityWindow, AdminAuditLog
 from .parser import parse_exam_file_wrapper
+
+logger = logging.getLogger(__name__)
 
 # ================= PUBLIC VIEWS =================
 def index(request):
@@ -24,14 +27,38 @@ def admin_login(request):
         return redirect('admin_dashboard')
         
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None and user.is_staff:
-            login(request, user)
-            return redirect('admin_dashboard')
-        else:
-            messages.error(request, "Invalid credentials")
+        try:
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            
+            if not username or not password:
+                messages.error(request, "Username and password are required")
+                return render(request, 'admin_login.html')
+            
+            logger.info(f"Login attempt for username: {username}")
+            
+            # Test database connection before authentication
+            try:
+                from django.db import connection
+                connection.ensure_connection()
+                logger.info("Database connection successful")
+            except Exception as db_error:
+                logger.error(f"Database connection failed: {str(db_error)}", exc_info=True)
+                messages.error(request, "Database connection error. Please contact administrator.")
+                return render(request, 'admin_login.html')
+            
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None and user.is_staff:
+                login(request, user)
+                logger.info(f"Successful login for user: {username}")
+                return redirect('admin_dashboard')
+            else:
+                logger.warning(f"Failed login attempt for username: {username}")
+                messages.error(request, "Invalid credentials")
+        except Exception as e:
+            logger.error(f"Error during login: {str(e)}", exc_info=True)
+            messages.error(request, "An error occurred during login. Please try again.")
             
     return render(request, 'admin_login.html')
 
