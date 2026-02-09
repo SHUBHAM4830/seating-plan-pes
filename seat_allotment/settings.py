@@ -78,32 +78,55 @@ WSGI_APPLICATION = 'seat_allotment.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 import os
+from urllib.parse import urlparse, parse_qs
 
 # Determine if running in production (Render) or development
 IS_RENDER = bool(os.environ.get("RENDER"))
 
 if IS_RENDER:
-    # Production: Turso/libsql
-    #
-    # IMPORTANT:
-    # - Use the exact URL provided by Turso (usually looks like: libsql://<db>-<org>.turso.io)
-    # - Do NOT hardcode the hostname; it can vary by org/region and Turso may reject old endpoints.
-    #
-    # Supported env vars (set these in Render):
-    # - TURSO_DATABASE_URL (preferred) OR DATABASE_URL
-    # - TURSO_AUTH_TOKEN (optional if your URL already embeds auth via querystring)
-    turso_db_url = os.environ.get("TURSO_DATABASE_URL") or os.environ.get("DATABASE_URL")
-    turso_auth_token = os.environ.get("TURSO_AUTH_TOKEN")
-
-    db_options = {}
-    if turso_auth_token:
-        db_options["auth_token"] = turso_auth_token
-
+    # Production: Neon PostgreSQL
+    # Parse DATABASE_URL from environment variable
+    # Format: postgresql://user:password@host:port/dbname?sslmode=require
+    # 
+    # To override, set DATABASE_URL environment variable in Render dashboard
+    database_url = os.environ.get(
+        "DATABASE_URL",
+        "postgresql://neondb_owner:npg_Zg6QwzLMxuB1@ep-billowing-recipe-a152il1x-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+    )
+    
+    # Parse the connection string
+    parsed = urlparse(database_url)
+    
+    # Extract connection parameters
+    db_name = parsed.path.lstrip('/')
+    db_user = parsed.username
+    db_password = parsed.password
+    db_host = parsed.hostname
+    db_port = parsed.port or 5432
+    
+    # Parse query parameters for SSL settings
+    query_params = parse_qs(parsed.query)
+    ssl_mode = query_params.get('sslmode', ['require'])[0]
+    
+    # Build OPTIONS dict for PostgreSQL
+    db_options = {
+        'sslmode': ssl_mode,
+    }
+    
+    # Add connect_timeout for better connection handling
+    db_options['connect_timeout'] = 10
+    
     DATABASES = {
-        "default": {
-            "ENGINE": "libsql.db.backends.sqlite3",
-            "NAME": turso_db_url,
-            **({"OPTIONS": db_options} if db_options else {}),
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': db_name,
+            'USER': db_user,
+            'PASSWORD': db_password,
+            'HOST': db_host,
+            'PORT': db_port,
+            'OPTIONS': db_options,
+            # Connection pool settings for better performance
+            'CONN_MAX_AGE': 600,  # Reuse connections for 10 minutes
         }
     }
 else:
