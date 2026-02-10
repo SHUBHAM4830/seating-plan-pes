@@ -16,9 +16,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Determine if running in production (Render) or development
-# This must be defined early as it's used in settings below
-IS_RENDER = bool(os.environ.get("RENDER"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -31,30 +28,6 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-5c$bz85v$bhp3#bis1t8&
 DEBUG = os.environ.get('Debug', 'False') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,seating-plan-pes.onrender.com').split(',')
-
-# CSRF settings for HTTPS (required for Django 4.0+)
-# Note: Wildcards are not supported, must use exact domains
-CSRF_TRUSTED_ORIGINS = [
-    'https://seating-plan-pes.onrender.com',
-]
-
-# Cookie security settings (only secure in production)
-if IS_RENDER:
-    # Allow CSRF cookie to be sent over HTTPS in production
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SECURE = True
-    # CSRF cookie settings for Render
-    CSRF_COOKIE_HTTPONLY = False  # Must be False for JavaScript access if needed
-    CSRF_COOKIE_SAMESITE = 'Lax'  # Allow CSRF cookie in cross-site requests
-    CSRF_COOKIE_DOMAIN = None  # Use default (current domain) - important for Render
-    CSRF_USE_SESSIONS = False  # Use cookie-based CSRF (default)
-    # Ensure CSRF cookie is set on all requests
-    CSRF_COOKIE_PATH = '/'
-else:
-    # Allow cookies over HTTP in development
-    CSRF_COOKIE_SECURE = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SAMESITE = 'Lax'
 
 
 # Application definition
@@ -104,16 +77,21 @@ WSGI_APPLICATION = 'seat_allotment.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+import os
 from urllib.parse import urlparse, parse_qs
 
+# Determine if running in production (Render) or development
+IS_RENDER = bool(os.environ.get("RENDER"))
+
 if IS_RENDER:
-    # Production: Render PostgreSQL
-    # Render automatically sets DATABASE_URL to the internal URL when you link a PostgreSQL database
-    # Internal URL (default): postgresql://user:password@internal-host/dbname (faster, no external bandwidth)
-    # External URL: postgresql://user:password@external-host/dbname (for external access)
+    # Production: Neon PostgreSQL
+    # Parse DATABASE_URL from environment variable
+    # Format: postgresql://user:password@host:port/dbname?sslmode=require
+    # 
+    # To override, set DATABASE_URL environment variable in Render dashboard
     database_url = os.environ.get(
         "DATABASE_URL",
-        "postgresql://seating_user:QLk0XswTvkXY7VejyFsKSiBYEt6NY0cr@dpg-d656emhr0fns738h7i4g-a/seating"
+        "postgresql://neondb_owner:npg_Zg6QwzLMxuB1@ep-billowing-recipe-a152il1x-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
     )
     
     # Parse the connection string
@@ -126,7 +104,7 @@ if IS_RENDER:
     db_host = parsed.hostname
     db_port = parsed.port or 5432
     
-    # Parse query parameters for SSL settings (Render PostgreSQL requires SSL)
+    # Parse query parameters for SSL settings
     query_params = parse_qs(parsed.query)
     ssl_mode = query_params.get('sslmode', ['require'])[0]
     

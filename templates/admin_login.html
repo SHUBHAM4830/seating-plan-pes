@@ -154,7 +154,7 @@
             {% endfor %}
             {% endif %}
 
-            <form method="post" action="{% url 'admin_login' %}">
+            <form method="post">
                 {% csrf_token %}
                 <div class="input-group">
                     <label for="username">Username</label>
