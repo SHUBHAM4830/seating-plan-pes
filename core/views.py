@@ -227,7 +227,7 @@ def preview_data(request):
                 VisibilityWindow.objects.create(
                     file=u_obj,
                     window_name=w_name,
-                    visible_from=exam_dt - timedelta(minutes=30),
+                    visible_from=exam_dt - timedelta(minutes=45),
                     visible_until=exam_dt + timedelta(hours=3),
                     is_active_manual=True
                 )
